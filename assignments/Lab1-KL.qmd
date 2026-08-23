@@ -1,0 +1,369 @@
+---
+title: "Lab 1: Reproducible Data Visualization Workflow"
+author: "Kimaya Lacey"
+format: docx
+editor: visual
+---
+
+## Part 3: Loading Packages
+
+```{r}
+#| label: load-packages
+install.packages("tidyverse")
+install.packages("here")
+install.packages("fs")
+
+library(tidyverse)
+library(here)
+library(fs)
+```
+
+## Part 4: Confrim the project Root
+
+```{r}
+#| label: confirm-project-root
+here()
+
+```
+
+# Answer:
+
+1.  What path was printed?
+2.  Does it point to the correct course project?
+3.  Why is working from an R Project preferable to manually setting the working directory?
+
+## Part 5: Create the Folder Structure
+
+```{r}
+#| label: create-folder-structure
+
+folders <- c(
+  "data",
+  "figure",
+  "scripts",
+  "tables",
+  "assignments",
+  "labs",
+  "portfolio"
+)
+
+for (folder in folders) {
+  dir.create(here::here(folder), showWarnings = FALSE)
+}
+```
+
+# Part 6: Inspect the Folder Structure
+
+```{r}
+#| label: inspect-folder-structure
+dir_ls()
+```
+
+# Part 7: Create a Simulated Public Health Dataset
+
+Create a reproducible county-level dataset with the following variables:
+
+-   `county`
+-   `region`
+-   `adult_population`
+-   `asthma_visits`
+-   `vaccination_rate`
+-   `asthma_visit_rate`
+
+Requirements:
+
+-   Include 12 fictional counties.
+-   Include three regions: North, Central, and South.
+-   Use `set.seed(716)`.
+-   Generate plausible values for population, visits, and vaccination coverage.
+-   Calculate asthma visit rate per 100,000.
+-   Round the rate to one decimal place.
+-   Use tidy formatting.
+
+```{r}
+#| label: create-simulated-health-data
+publichealth_county <- data.frame(
+  county = c("Cook", "Lee", "Dekalb", "Lithonia", "Rockdale", "Cobb", "Fulton", "Gwinett", "Chatham", "Hill", "Richmond", "Henry"), 
+  region = c("North", "Central", "South", "South", "North", "Central", "Central", "South", "North", "South", "Central", "North"),
+  adult_population = c("245,000", "746,218", "501,321", "175,093", "632,844", "382,742", "946,129", "123,456", "789,032", "216,822", "876,543", "497,641"),
+  vaccination_rate = c(".92",".14",".67",".53",".81",".30",".49",".25",".78", ".42",".56",".29" ),
+  asthma_visit_rate = c("245.6", "318.4", "187.9","421.7","356.2","279.5","512.3", "198.7","384.1","267.8","449.6","331.5")
+)
+
+publichealth_county
+```
+
+# Part 8: Save the Dataset
+
+Save the dataset as:
+
+``` text
+data/county_health_data.csv
+```
+
+Use `write_csv()` and `here()`.
+
+```{r}
+#| label: save-simulated-health-data
+#| data/publichealth_county.csv
+write_csv(publichealth_county, "publichealth_county.csv")
+here()
+```
+
+# Part 9: Remove and Re-Import the Dataset
+
+Remove the object from the environment.
+
+```{r}
+#| label: remove-health-data
+rm(publichealth_county)
+```
+
+Then re-import the CSV file using `read_csv()` and `here()`.
+
+```{r}
+#| label: import-health-data
+publichealth_county <- read_csv(
+  here("publichealth_county.csv")
+)
+```
+
+# Part 10: Inspect the Data
+
+Use `glimpse()`.
+
+```{r}
+#| label: inspect-health-data
+glimpse(publichealth_county)
+```
+
+Create a one-row summary containing:
+
+-   number of counties,
+-   mean vaccination rate,
+-   median asthma visit rate.
+
+```{r}
+#| label: summarize-health-data
+
+phc_sum <- publichealth_county %>%
+  summarise(
+    num_county = n_distinct(county),
+    mean_vaccination_rate = mean(vaccination_rate),
+    median_asthma_visit_rate = median(asthma_visit_rate)
+  )
+
+phc_sum
+```
+
+Answer:
+
+1.  What does one row represent? Descriptive Statistics
+2.  How many variables are included? 3
+3.  Which variables are categorical? Region
+4.  Which variables are numeric? Vaccination rate, population, and asthma visit
+5.  Which variable should be used to compare asthma burden fairly across counties? Region
+
+# Part 11: Create a Ranked Vaccination Bar Chart
+
+Create a horizontal bar chart ranking counties by vaccination coverage.
+
+Requirements:
+
+-   Reorder counties by vaccination rate.
+-   Add a dashed reference line at 80%.
+-   Use an informative title and subtitle.
+-   Label the y-axis as vaccination coverage.
+-   State that the values are simulated.
+-   Use a readable theme.
+-   Store the graph as `vaccination_plot`.
+
+```{r}
+#| label: create-vaccination-plot
+#| fig-cap: "Simulated vaccination coverage by county."
+#| fig-alt: "Horizontal bar chart ranking fictional counties by simulated vaccination coverage."
+vaccination_plot <- publichealth_county %>%
+                    ggplot(
+                      aes(
+                      x = county,
+                      y = vaccination_rate, colour = region
+                    )) + 
+  geom_col(fill = "pink") + 
+  geom_hline(
+    yintercept = .80,
+    linetype = "dashed"
+    ) + 
+  coord_flip() +
+labs(
+  title = "County Vaccination Coverage", 
+  subtitle = "Simulated vaccination coverage by county", 
+  x = "County",
+  y = "Vaccination Rate"
+) + 
+  theme_minimal()
+vaccination_plot
+```
+
+# Part 12: Interpret the Figure
+
+Answer in two or three complete sentences.
+
+1.  What pattern does the figure show?
+2.  Which counties appear furthest below the target?
+3.  What context would be required before using this graph for a real decision?
+
+**Response:**
+
+# Part 13: Save the Vaccination Figure
+
+Save the graph as:
+
+``` text
+figures/lab01_vaccination_coverage.png
+```
+
+Use:
+
+-   width of 8 inches,
+-   height of 6 inches,
+-   resolution of 300 dpi.
+
+```{r}
+#| label: save-vaccination-plot
+ggsave(
+  here("figure", "lab01_vaccination_coverage.png"),
+  plot = vaccination_plot,
+  width = 8,
+  height = 6,
+  dpi = 300
+)
+```
+
+# Part 14: Independent Visualization
+
+Create one additional visualization using the same dataset.
+
+Choose one:
+
+-   scatterplot of adult population and asthma visits,
+-   bar chart of mean vaccination coverage by region,
+-   dot plot of asthma visit rates by county,
+-   or another instructor-approved graph.
+
+Requirements:
+
+-   Store the graph as `independent_plot`.
+-   Include an informative title and subtitle.
+-   Label both axes clearly.
+-   Add a caption identifying the data as simulated.
+-   Use a readable theme.
+
+```{r}
+#| label: independent-visualization
+#| fig-cap: "Independent visualization created by the student."
+independent_plot <- publichealth_county %>%
+                    ggplot(
+                      aes(
+                        x = adult_population,
+                        y = asthma_visit_rate, colour = region
+                      )) + 
+  geom_line() + 
+  labs(
+    title = "Frequency of Asthma Visits by Adult Population",
+    subtitle = "Independent visualization created by the student",
+    x = "Adult population",
+    y = "Asthma rates per 100,000 people"
+  )
+independent_plot
+# Add your code here.
+```
+
+# Part 15: Save the Independent Figure
+
+Save the graph as:
+
+``` text
+figures/lab01_independent_visualization.png
+```
+
+Use:
+
+-   width of 8 inches,
+-   height of 5 inches,
+-   resolution of 300 dpi.
+
+```{r}
+#| label: save-independent-visualization
+ggsave(
+  here("figures", "lab01_independent_visualization.png"),
+  plot = vaccination_plot,
+  width = 8,
+  height = 6,
+  dpi = 300
+)
+```
+
+# Part 16: Tidy Coding Check
+
+Review your code and confirm:
+
+-   [ ] `%>%` is used instead of the native pipe
+-   [ ] one major function appears per line
+-   [ ] arguments are indented consistently
+-   [ ] object names are descriptive
+-   [ ] no `setwd()` appears
+-   [ ] no absolute file paths appear
+-   [ ] code chunks have labels
+
+# Part 17: Git and GitHub
+
+Complete the following:
+
+1.  Open the Git pane.
+2.  Review the changed files.
+3.  Stage the files associated with this lab.
+4.  Commit using a meaningful message.
+5.  Push to GitHub.
+6.  Open the repository online and verify that the files appear.
+
+Suggested commit message:
+
+``` text
+Complete Lab 1 reproducible workflow
+```
+
+# Reflection Questions
+
+Answer each question in complete sentences.
+
+## Question 1
+
+Why is reproducibility important in public health research and practice?
+
+**Response:**
+
+## Question 2
+
+How does a consistent project structure improve collaboration and review?
+
+**Response:**
+
+## Question 3
+
+Why are relative paths preferable to absolute paths?
+
+**Response:**
+
+## Question 4
+
+How does GitHub contribute to reproducibility?
+
+**Response:**
+
+## Question 5
+
+What was the most challenging part of the lab?
+
+**Response:**
+
+# Deliverables

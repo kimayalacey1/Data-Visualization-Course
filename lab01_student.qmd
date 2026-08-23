@@ -250,7 +250,6 @@ Then re-import the CSV file using `read_csv()` and `here()`.
 ```{r}
 #| label: import-health-data
 
-# Add your code here.
 ```
 
 # Part 10: Inspect the Data
