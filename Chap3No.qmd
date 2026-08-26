@@ -1,0 +1,279 @@
+---
+title: "Chap3N"
+author: "Kimaya Lacey"
+format: docx
+editor: visual
+---
+
+# Data Wrangling 
+
+## installing packages 
+```{r}
+install.packages("tidyverse")
+install.packages("dplyr")
+install.packages("gapminder")
+
+library(tidyverse)
+library(dplyr)
+library(gapminder)
+```
+
+## glimpse
+```{r}
+glimpse(gapminder)
+head(gapminder)
+dim(gapminder)
+names(gapminder)
+summary(gapminder)
+```
+## Prepare the example dateset 
+```{r}
+gapminder_data <- gapminder %>%
+  rename(
+    life_expectancy = lifeExp,
+    population = pop,
+    gdp_per_capita = gdpPercap
+  )
+```
+
+
+## Selecting variables
+```{r}
+selected_data <- gapminder_data %>%
+  select(
+    country,
+    continent,
+    year,
+    life_expectancy
+  )
+
+glimpse(selected_data)
+```
+
+## 
+```{r}
+reduced_data <- health_data %>%
+  select(
+    -participant_id,
+    -free_text_response
+  )
+```
+
+# Filtering Observations 
+
+## filtering to one year 
+```{r}
+gapminder_2007 <- gapminder_data %>%
+  filter(year == 2007)
+```
+
+## filter to one group 
+```{r}
+africa_2007 <- gapminder_data %>%
+  filter(
+    year == 2007, 
+    continent == "Africa"
+  )
+```
+
+## filtering using multiple categories
+```{r}
+selected_continents <- gapminder_data %>%
+  filter(
+    year == 2007,
+    continent %in% c(
+      "Africa",
+      "Americas",
+      "Europe"
+    )
+  )
+```
+
+# Creating new variables 
+
+## create a population measure in millions
+```{r}
+gapminder_2007 <- gapminder_2007 %>%
+  mutate(
+    population_millions = population / 1e6
+  )
+```
+
+## create categories
+```{r}
+gapminder_2007 <- gapminder_2007 %>%
+  mutate(
+    life_expectancy_group = case_when(
+      life_expectancy < 60 ~ "Below 60 years",
+      life_expectancy < 75 ~ "60 to 74 years",
+      life_expectancy >= 75 ~ "75 years or more",
+      TRUE ~ NA_character_
+    )
+  )
+```
+
+# Arranging observations 
+
+## using arrange() function 
+```{r}
+highest_life_expectancy <- gapminder_2007 %>%
+  arrange(
+    desc(life_expectancy)
+  ) %>%
+  select(
+    country,
+    continent,
+    life_expectancy
+  )
+
+head(
+  highest_life_expectancy,
+  n = 10
+)
+```
+
+# Grouping and summarizing 
+
+## mean life expectancy by continent
+```{r}
+continent_summary <- gapminder_2007 %>%
+  group_by(continent) %>%
+  summarize(
+    mean_life_expectancy = mean(
+      life_expectancy,
+      na.rm = TRUE
+    ),
+    median_life_expectancy = median(
+      life_expectancy,
+      na.rm = TRUE
+    ),
+    country_count = n(),
+    .groups = "drop"
+  )
+
+continent_summary
+```
+
+## visualize the summary 
+```{r}
+ggplot(
+  data = continent_summary,
+  mapping = aes(
+    x = reorder(
+      continent,
+      mean_life_expectancy
+    ),
+    y = mean_life_expectancy
+  )
+) +
+  geom_col() +
+  coord_flip() +
+  labs(
+    title = "Mean Life Expectancy by Continent",
+    subtitle = "Country-level observations from 2007",
+    x = NULL,
+    y = "Mean life expectancy in years",
+    caption = "Source: Gapminder"
+  ) +
+  theme_minimal()
+```
+
+# Wide and Long Data
+
+## reshaping with pivot_longer
+```{r}
+vaccination_wide <- tibble(
+  county = c(
+    "County A",
+    "County B",
+    "County C"
+  ),
+  vaccination_2023 = c(
+    62,
+    71,
+    58
+  ),
+  vaccination_2024 = c(
+    68,
+    73,
+    64
+  )
+)
+
+vaccination_wide
+```
+
+## pivot_longer
+```{r}
+vaccination_long <- vaccination_wide %>%
+  pivot_longer(
+    cols = starts_with("vaccination_"),
+    names_to = "year",
+    values_to = "vaccination_rate"
+  ) %>%
+  mutate(
+    year = str_remove(
+      year,
+      "vaccination_"
+    )
+  )
+
+vaccination_long
+```
+
+## visualize the long data
+```{r}
+ggplot(
+  data = vaccination_long,
+  mapping = aes(
+    x = year,
+    y = vaccination_rate,
+    group = county,
+    color = county
+  )
+) +
+  geom_line(
+    linewidth = 1
+  ) +
+  geom_point(
+    size = 3
+  ) +
+  labs(
+    title = "Vaccination Rates Increased Across Three Counties",
+    x = "Year",
+    y = "Vaccination rate (%)",
+    color = "County"
+  ) +
+  theme_minimal()
+```
+
+## reshaping with pivot_wider 
+```{r}
+vaccination_wide_again <- vaccination_long %>%
+  pivot_wider(
+    names_from = year,
+    values_from = vaccination_rate,
+    names_prefix = "vaccination_"
+  )
+
+vaccination_wide_again
+```
+
+# Missing Data
+```{r}
+gapminder_data %>%
+  summarize(
+    missing_life_expectancy = sum(
+      is.na(life_expectancy)
+    ),
+    missing_population = sum(
+      is.na(population)
+    ),
+    missing_gdp = sum(
+      is.na(gdp_per_capita)
+    )
+  )
+```
+
+
+

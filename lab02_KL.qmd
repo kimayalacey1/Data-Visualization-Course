@@ -1,0 +1,166 @@
+---
+title: "Lab 2: Applying the Grammar of Graphics"
+subtitle: "Student Version"
+format:
+  docx:
+    toc: true
+    toc-depth: 3
+    code-copy: true
+    code-tools: true
+execute:
+  eval: false
+  warning: false
+  message: false
+---
+
+# Learning Objectives
+
+You will apply the Grammar of Graphics to several public health questions.
+
+# Setup
+
+Load `tidyverse` and `gapminder`.
+
+```{r}
+#| label: load-packages
+library(tidyverse)
+library(gapminder)
+```
+
+# Part 1: Prepare the Data
+
+Create `gapminder_2007` by filtering to 2007 and renaming `lifeExp`, `gdpPercap`, and `pop` to descriptive names.
+## 
+```{r}
+#| label: prepare-data
+gapminder_data <- gapminder %>%
+  rename(
+    life_expectancy = lifeExp,
+    population = pop,
+    gdp_per_capita = gdpPercap
+  )
+gapminder_2007 <- gapminder_data %>%
+  filter(year == 2007)
+```
+
+# Part 2: Scatterplot
+
+Create a scatterplot of GDP per capita and life expectancy. Use a logarithmic x-axis, map continent to color, use an accessible palette, and include complete labels.
+
+```{r}
+#| label: scatterplot
+#| fig-cap: "GDP per capita and life expectancy in 2007."
+gapminder_07g <- gapminder_2007 %>% 
+  ggplot(
+    aes(
+      x = gdp_per_capita, 
+      y = life_expectancy, colour = continent
+    )) + 
+      geom_point() + 
+      scale_x_log10() +
+      geom_smooth(
+        aes(group=1),
+        method = "lm",
+        se = FALSE
+      ) +
+      scale_color_viridis_d() +
+      labs(
+        title = "GDP per capita and life expectancy in 2007", 
+        x = "Gross Domestic Product per Capita", 
+        y = "Life Expectancy"
+      )
+gapminder_07g
+```
+
+# Part 3: Ranked Bar Chart
+
+Calculate mean life expectancy by continent and create a ranked horizontal bar chart.
+
+```{r}
+#| label: bar-chart
+cont_sum <- gapminder_2007 %>%
+  group_by(continent) %>%
+  summarize(
+    mean_life_expectancy = mean(
+      life_expectancy,
+      na.rm = TRUE
+    ),
+    median_life_expectancy = median(
+      life_expectancy,
+      na.rm = TRUE
+    ),
+    country_count = n(),
+    .groups = "drop"
+  )
+cont_sum
+```
+
+```{r}
+#contsum_07c <- cont_sum
+  
+contsum_07c <- ggplot( 
+  cont_sum,
+    aes(
+      x = mean_life_expectancy, 
+      y = continent, fill = continent
+    )
+  ) + 
+   geom_bar(
+     stat = "summary",
+     fun = "mean"
+   ) +
+  labs(
+    title = "Mean Life Expectancy by Continent", 
+    x = "Mean Life Expectancy",
+    y = "Continent"
+  )
+contsum_07c
+```
+
+# Part 4: Distribution
+
+Create a boxplot comparing life expectancy across continents.
+
+```{r}
+#| label: boxplot
+
+# Add your code here.
+```
+
+# Part 5: Faceting
+
+Create a faceted scatterplot showing the GDP–life expectancy relationship separately by continent.
+
+```{r}
+#| label: faceted-scatterplot
+
+# Add your code here.
+```
+
+# Part 6: Identify the Grammar
+
+For one graph, identify the data, aesthetics, geometry, scales, labels, facets, and theme.
+
+**Response:**  
+
+# Part 7: Independent Visualization
+
+Create one additional chart that answers a public health question. State the question, justify the chart, use an informative title, and add alt text.
+
+```{r}
+#| label: independent-chart
+
+# Add your code here.
+```
+
+# Reflection
+
+1. Which aesthetic mappings changed the meaning of the graph?
+2. When did faceting improve interpretation?
+3. Which graph most clearly communicated one finding?
+
+**Response:**  
+
+# Deliverables
+
+Submit the completed QMD, rendered HTML, five visualizations, reflections, and Git commit.

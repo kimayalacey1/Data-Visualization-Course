@@ -1,0 +1,104 @@
+/*-- scss:defaults --*/
+  $font-family-sans-serif: "Trebuchet MS", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+$body-bg: #BFdFF3;       // Blue Crystal
+  $body-color: #333333;
+  $link-color: #F055A5;    // Pink Punch
+  $navbar-bg: #7A88FE;     // Violet Syrup
+  $navbar-fg: #ffffff;
+  $navbar-hl: #FABE37;     // Lemon Drop
+  $headings-color: #7A88FE;
+  
+  /*-- scss:rules --*/
+  body {
+    font-family: $font-family-sans-serif;
+    font-size: 1.05rem;
+    line-height: 1.6;
+    background-color: $body-bg;
+  }
+
+h1, h2, h3, h4, h5, h6 {
+  color: $headings-color;
+}
+
+a {
+  color: $link-color;
+  font-weight: 500;
+}
+
+a:hover {
+  color: #FF9B28; // Orange Paloma
+    text-decoration: underline;
+}
+
+.subtitle {
+  display: block;
+  font-size: 1.2rem;
+  color: #F055A5;
+    font-style: italic;
+  margin-top: 0.5rem;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.section-header {
+  font-size: 1.4rem;
+  color: $headings-color;
+  font-weight: 600;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+}
+
+.navbar {
+  background-color: $navbar-bg !important;
+}
+
+.navbar .nav-link.active {
+  color: $navbar-hl !important;
+  font-weight: bold;
+}
+
+.text-bold {
+  font-weight: bold;
+  color: #DAA520;  // Lemon Drop
+}
+
+.text-underline {
+  text-decoration: underline;
+  text-decoration-color: #F055A5;  // Pink Punch
+}
+
+.text-italic {
+  font-style: italic;
+  color: #7A88FE;  // Violet Syrup
+}
+
+/* Buttons */
+  .btn-primary {
+    background-color: #F055A5;  // Pink Punch
+      border: none;
+    color: #fff;
+      font-weight: 600;
+  }
+
+.btn-primary:hover {
+  background-color: #FF9B28; // Orange Paloma
+    color: #fff;
+}
+
+/* Blockquotes */
+  blockquote {
+    border-left: 5px solid #FABE37; // Lemon Drop
+    background-color: #ffffffcc;
+      padding: 1rem;
+    font-style: italic;
+    color: #444;
+  }
+
+/* Callout boxes */
+  .callout {
+    border-left: 5px solid #CCD537; // Lime Wedge
+    background-color: #ffffffcc;
+      padding: 1rem;
+    border-radius: 8px;
+    margin: 1.5rem 0;
+  }
