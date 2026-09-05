@@ -1,0 +1,271 @@
+---
+title: "Lab 3: Data Wrangling for Visualization"
+subtitle: "Student Version"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    code-copy: true
+    code-tools: true
+execute:
+  eval: false
+  warning: false
+  message: false
+---
+
+# Learning Objectives
+
+You will clean, reshape, summarize, and join public health data before visualization.
+
+# Setup
+
+Load `tidyverse`.
+
+```{r}
+#| label: load-packages
+library(tidyverse)
+```
+
+# Part 1: Create Raw Data
+
+Create `raw_health_data` with at least eight counties, region, 2023 and 2024 population and case columns, one duplicate county, and one missing value.
+
+```{r}
+#| label: raw-data
+raw_health_data <- data.frame(
+  county = c(
+    "Fulton", "DeKalb", "Cobb", "Gwinnett", "Clayton",
+    "Chatham", "Richmond", "Muscogee", "Bibb", "Fulton"
+  ),
+  
+  region = c(
+    "Metro Atlanta", "Metro Atlanta", "Metro Atlanta", "Metro Atlanta",
+    "Metro Atlanta", "Coastal", "Central Savannah River",
+    "West Central", "Central", "Metro Atlanta"
+  ),
+  
+  population_2023 = c(
+    1091240, 764400, 787100, 971300, 306800,
+    295100, 207400, 202600, 157800, 1091240
+  ),
+  
+  population_2024 = c(
+    1103500, 772100, 794800, 983600, 309200,
+    298400, 209100, 204300, 159100, 1103500
+  ),
+  
+  cases_2023 = c(
+    842, 615, 487, 721, 268,
+    193, 156, 141, 119, 842
+  ),
+  
+  cases_2024 = c(
+    901, 643, 512, 756, 291,
+    207, 164, 153, NA, 901
+  )
+)
+
+raw_health_data
+```
+
+# Part 2: Diagnose
+
+Use `glimpse()`, duplicate checks, and missing-value summaries.
+
+```{r}
+#| label: diagnose-data
+
+glimpse(raw_health_data)
+```
+
+# Part 3: Remove Duplicates
+
+Create `health_data_clean` with one row per county.
+
+```{r}
+#| label: remove-duplicates
+
+health_data_clean <- raw_health_data %>%
+  distinct(county, .keep_all = TRUE)
+health_data_clean
+```
+
+# Part 4: Reshape Long
+
+Create county, region, year, population, and cases columns.
+
+```{r}
+#| label: reshape-long
+
+health_data_long <- health_data_clean %>%
+  pivot_longer(
+    cols = c(population_2023, population_2024,
+             cases_2023, cases_2024),
+    names_to = c(".value", "year"),
+    names_pattern = "(population|cases)_(\\d{4})"
+  )
+
+health_data_long
+```
+
+# Part 5: Calculate Rates
+
+Calculate cases per 100,000.
+
+```{r}
+#| label: calculate-rates
+health_data_long <- health_data_long %>%
+  mutate(
+    cases_per_100k = cases / 100000
+  )
+# Add your code here.
+```
+
+# Part 6: Summarize
+
+Calculate mean rate by region and year.
+
+```{r}
+#| label: summarize-region
+
+health_data_sum <- health_data_long %>%
+  mutate(
+    rate = (cases / population) * 100000
+  ) %>%
+  group_by(region, year) %>%
+  summarize(
+    mean_rate = mean(rate, na.rm = TRUE),
+    .groups = "drop"
+  )
+health_data_sum
+# Add your code here.
+```
+
+# Part 7: Join Contextual Data
+
+Create a county rural-status table and join it with `left_join()`. Check duplicates, unmatched rows, and row counts.
+
+```{r}
+#| label: join-data
+county_rural_status <- data.frame(
+  county = c(
+     "Fulton", "DeKalb", "Cobb", "Gwinnett", "Clayton",
+    "Chatham", "Richmond", "Muscogee", "Bibb"
+  ),
+  rural_status = c(
+    "Urban", "Rural", "Rural", "Urban", "Urban",
+    "Urban", "Rural", "Urban", "Rural"
+  )
+)
+
+county_health_join <- health_data_clean %>%
+  left_join(
+    county_rural_status,
+    by = "county"
+  )
+
+```
+
+# Part 8: Visualize
+
+Create a regional line graph, ranked 2024 county graph, and rural-status comparison.
+
+```{r}
+#| label: Regional line visulaization
+regional_rates <- health_data_long %>%
+  mutate(
+    rate = (cases / population) * 100000
+  ) %>%
+  group_by(region, year) %>%
+  summarize(
+    mean_rate = mean(rate, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+ggplot(
+  regional_rates,
+  aes(
+    x = year,
+    y = mean_rate,
+    group = region,
+    color = region
+  )
+) +
+  geom_line(
+    linewidth = 1) +
+  geom_point(
+    size = 3) +
+  labs(
+    title = "Mean Health Case Rate by Region",
+    subtitle = "Comparing regional case rates from 2023 to 2024",
+    x = "Year",
+    y = "Mean Cases per 100,000",
+    color = "Region"
+  ) +
+  theme_classic()
+```
+
+
+```{r}
+#| label: Ranked 2024 county visualization
+county_ru24 <- county_health_join %>% 
+  select(county, population_2024, cases_2024) %>%
+  mutate(
+    rate = (cases_2024 / population_2024) * 100000
+  ) %>%
+  arrange(desc(rate))
+
+ggplot(
+  county_ru24,
+  aes(
+    x = reorder(county, rate), 
+    y = rate
+  )
+) +
+  geom_col(fill = "pink") +
+  coord_flip() +
+  labs(
+    title = "2024 Health Case Rate by County",
+    subtitle = "County-level comparison of reported cases per 100,000 residents in 2024",
+    x = "County",
+    y = "Cases per 100,000"
+  ) +
+  theme_classic()
+```
+
+
+```{r}
+#| label: Rural Status Comparison Visualization
+
+rural_compar <- county_health_join %>%
+  drop_na(cases_2023, population_2023, rural_status) %>%
+  mutate(
+    rate = (cases_2023 / population_2023) * 100000
+  ) %>%
+  group_by(rural_status) %>%
+  summarize(
+    mean_rate = mean(rate, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+ggplot(
+  rural_compar,
+  aes(
+    x = rural_status,
+    y = mean_rate, fill = rural_status
+  )
+) +
+  geom_col() +
+  labs(
+    title = "2023 Health Case Rate by Rural Status",
+    subtitle = "Comparing mean case rates between rural and urban counties",
+    x = "Rural Status",
+    y = "Mean Cases per 100,000"
+  ) +
+  theme_classic()
+```
+
+# Reflection
+
+Explain why long format was useful, what causes row multiplication during joins, and why rates are preferable to counts.
+

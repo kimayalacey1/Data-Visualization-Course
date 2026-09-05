@@ -8,7 +8,6 @@ format:
     code-copy: true
     code-tools: true
 execute:
-  eval: false
   warning: false
   message: false
 ---
@@ -17,20 +16,15 @@ execute:
 
 You will apply the Grammar of Graphics to several public health questions.
 
-# Setup
-
-Load `tidyverse` and `gapminder`.
-
 ```{r}
 #| label: load-packages
+#| include: false
 library(tidyverse)
 library(gapminder)
 ```
 
 # Part 1: Prepare the Data
 
-Create `gapminder_2007` by filtering to 2007 and renaming `lifeExp`, `gdpPercap`, and `pop` to descriptive names.
-## 
 ```{r}
 #| label: prepare-data
 gapminder_data <- gapminder %>%
@@ -45,11 +39,9 @@ gapminder_2007 <- gapminder_data %>%
 
 # Part 2: Scatterplot
 
-Create a scatterplot of GDP per capita and life expectancy. Use a logarithmic x-axis, map continent to color, use an accessible palette, and include complete labels.
-
 ```{r}
 #| label: scatterplot
-#| fig-cap: "GDP per capita and life expectancy in 2007."
+#| fig-cap: GDP per capita and life expectancy in 2007.
 gapminder_07g <- gapminder_2007 %>% 
   ggplot(
     aes(
@@ -74,8 +66,6 @@ gapminder_07g
 
 # Part 3: Ranked Bar Chart
 
-Calculate mean life expectancy by continent and create a ranked horizontal bar chart.
-
 ```{r}
 #| label: bar-chart
 cont_sum <- gapminder_2007 %>%
@@ -96,6 +86,7 @@ cont_sum
 ```
 
 ```{r}
+#| label: horizontal bar chart
 #contsum_07c <- cont_sum
   
 contsum_07c <- ggplot( 
@@ -119,29 +110,79 @@ contsum_07c
 
 # Part 4: Distribution
 
-Create a boxplot comparing life expectancy across continents.
-
 ```{r}
 #| label: boxplot
+gpm_07bx <- ggplot(
+  data = gapminder_2007,
+  mapping = aes(
+    x = continent,
+    y = life_expectancy, colour = continent
+  )
+) +
+  geom_boxplot() + 
+  labs(
+    title = "Life Expectancy by Continent", 
+    x = "Continent",
+    y = "Mean Life Expectancy"
+    )
 
-# Add your code here.
+gpm_07bx
 ```
 
 # Part 5: Faceting
 
-Create a faceted scatterplot showing the GDP–life expectancy relationship separately by continent.
 
 ```{r}
 #| label: faceted-scatterplot
-
-# Add your code here.
+gpm_07fsc <- ggplot(
+  data = gapminder_2007,
+  mapping = aes(
+    x = gdp_per_capita,
+    y = life_expectancy, colour = continent
+  )
+) +
+  geom_point(
+    alpha = 0.7
+  ) +
+  scale_x_log10() +
+  facet_wrap(
+    vars(continent)
+  ) + 
+  labs(
+    title = "Life Expectancy by Continent",
+    subtitle = "Gapminder Data filtered to 2007",
+    x = "Gross Domestic Product per capita",
+    y = "Life Expectancy"
+    ) + theme_light()
+gpm_07fsc
 ```
 
 # Part 6: Identify the Grammar
 
 For one graph, identify the data, aesthetics, geometry, scales, labels, facets, and theme.
 
-**Response:**  
+Faceted Scatterplot displaying the GDP per Capita and Life Expectancy Relationship. 
+Data: Gapminder data from 2007
+
+Aesthetics: x-axis: Gross Domestic Product (GDP) per capita
+y-axis: Life expectancy
+
+Geometry: Geom_point
+
+Scales:
+The x-axis uses a logarithmic scale for GDP per capita.
+The y-axis shows life expectancy in years.
+Color distinguishes the five continents.
+
+Labels: 
+Title: Life Expectancy by Continent
+Subtitle: Gapminder Data
+x-axis: Gross Domestic Product per capita
+y-axis: Life Expectancy
+Legend: continent
+
+Facets: The graph is divided into five panels using the continent variable: Africa, Americas, Asia, Europe, and Oceania.
+Theme: The graph uses a white background with gray grid lines.
 
 # Part 7: Independent Visualization
 
@@ -149,18 +190,33 @@ Create one additional chart that answers a public health question. State the que
 
 ```{r}
 #| label: independent-chart
-
-# Add your code here.
+gpm_07id <- cont_sum %>%
+  ggplot(
+    aes(x = continent, 
+        y = mean_life_expectancy,
+        )) +
+  geom_col(fill = "pink") +
+  labs(
+    title = "Average Life Expectancy by Continent in 2007",
+    x = "Continent",
+    y = "Average Life Expectancy (years)",
+    alt = "Bar chart comparing average life expectancy across continents in 2007. Europe and Oceania have the highest average life expectancy, while Africa has the lowest."
+  ) +
+  theme_bw()
+gpm_07id
 ```
+
+## Independent Visualization Information 
+How does average life expectancy differ across continents in 2007?
+A bar chart is appropriate because the question compares average life expectancy across the continents groups. The bar chart can provide one simple finding without complex comparisons. 
 
 # Reflection
 
 1. Which aesthetic mappings changed the meaning of the graph?
+Once manipulating the independent and dependent variables (x and y), this can change the interpretation of the graphs findings. For example, if the GDP per Capita (x) and the Life Expectancy (y), the graph will showcase how Life Expectancy is affected by GDP per Capita. If you were to flip these, the graph will highlight how GDP per capita influences the Life Expectancy.
+
 2. When did faceting improve interpretation?
+Faceting improved interpretation by separating the continents and providing a space clear demonstration on the patterns within each continent without overlap. 
+
 3. Which graph most clearly communicated one finding?
-
-**Response:**  
-
-# Deliverables
-
-Submit the completed QMD, rendered HTML, five visualizations, reflections, and Git commit.
+The bar chart with the Life Expectancy by Continent. The differences between continents were readable without needing to interpret multiple variables.
