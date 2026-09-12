@@ -1,0 +1,128 @@
+---
+title: "Lab 4: Visualization Redesign and Accessibility"
+author: "Kimaya Lacey"
+format: docx
+editor: visual
+---
+
+# Learning Objectives
+
+You will critique, redesign, and test a visualization for accessibility.
+
+# Setup
+
+Load `tidyverse` and `gapminder`.
+
+```{r}
+#| label: loading tidyverse and gapminder
+
+library(tidyverse)
+library(gapminder)
+
+```
+
+
+# Part 1: Poor Graph
+
+Using 2007 Gapminder data, create a graph with at least five intentional weaknesses.
+
+```{r}
+#| label: poor-graph
+gapminder_2007 <- gapminder %>%
+  filter(year == 2007) 
+
+ggplot(gapminder_2007, 
+       aes(
+         x = gdpPercap, 
+         y = lifeExp, color = continent
+         )) +
+  geom_point(size = 5) +
+  geom_hline(yintercept = 80, linetype = "dashed") +
+  labs(
+    title = "Countries in 2007",
+    x = "GDP",
+    y = "Life"
+  )
+```
+
+# Part 2: Critique
+
+Identify five problems and explain their effects.
+
+1. The title "Countries in 2007" does not explain to the reader what variables are being compared or the ideation behind the graph. 
+2. The x-axis label only says "GDP", which is unclear for the reader because it represents GDP per capita and can be mistaken for another label. 
+3. The y-axis label only says "life" and the reader would not be able to understand that the variable represents life expectancy. 
+4. The points are huge and overlapping each other and this can make reading the graph difficult and readers can't distinguish data between the continents. 
+5. The y-axis begins at 40 rather than 0 and this scale can make differences in life expectancy appear larger than they actually are.
+
+
+# Part 3: Redesign
+
+Create an improved graph with a finding-focused title, meaningful order, accessible design, clear labels, reduced clutter, alt text, and source.
+
+```{r}
+#| label: redesigned-graph
+
+ggplot(
+  gapminder_2007,
+  aes(
+    x = gdpPercap, 
+    y = lifeExp, colour = continent)
+) +
+  geom_point(size = 3, alpha = 0.7) +
+  scale_x_log10() +
+  labs(
+    title = "GDP per Capita Associated With Life Expectancy in 2007",
+    subtitle = "Source: Gapminder, 2007",
+    x = "GDP per capita",
+    y = "Life expectancy (years)",
+  ) +
+  theme_classic()
+```
+
+# Part 4: Highlighting
+
+Create a graph that highlights one continent and mutes the others.
+
+```{r}
+#| label: highlight-version
+
+ggplot(
+  gapminder_2007,
+  aes(
+    x = gdpPercap, 
+    y = lifeExp, fill = continent)
+) +
+  geom_point(
+    data = gapminder_2007 %>% 
+      filter(continent != "Africa"),
+    size = 2,
+    alpha = 0.25,
+  ) +
+  geom_point(
+    data = gapminder_2007 %>% 
+      filter(continent == "Africa"),
+    size = 3,
+    alpha = 1, 
+  ) +
+  scale_x_log10() +
+  labs(
+    title = "Africa Has Lower Life Expectancy compared to other continents in 2007",
+    x = "GDP per capita",
+    y = "Life expectancy (years)",
+    subtitle = "Source: Gapminder, 2007"
+  ) +
+  theme_classic()
+```
+
+# Part 5: Accessibility Review
+
+Evaluate color dependence, contrast, font size, legend use, grayscale readability, and alt text.
+
+**Response:**  
+
+# Part 6: Published Graphic Critique
+
+Critique an instructor-approved public health graphic for purpose, data, chart choice, accessibility, uncertainty, and ethics.
+
+**Response:**

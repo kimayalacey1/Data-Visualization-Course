@@ -1,16 +1,8 @@
 ---
-title: "Lab 3: Data Wrangling for Visualization"
-subtitle: "Student Version"
-format:
-  html:
-    toc: true
-    toc-depth: 3
-    code-copy: true
-    code-tools: true
-execute:
-  eval: false
-  warning: false
-  message: false
+title: "Lab03_KL"
+author: "Kimaya Lacey"
+format: docx
+editor: visual
 ---
 
 # Learning Objectives
@@ -23,6 +15,7 @@ Load `tidyverse`.
 
 ```{r}
 #| label: load-packages
+#| include: false
 library(tidyverse)
 ```
 
@@ -32,6 +25,7 @@ Create `raw_health_data` with at least eight counties, region, 2023 and 2024 pop
 
 ```{r}
 #| label: raw-data
+#| echo: false
 raw_health_data <- data.frame(
   county = c(
     "Fulton", "DeKalb", "Cobb", "Gwinnett", "Clayton",
@@ -74,6 +68,7 @@ Use `glimpse()`, duplicate checks, and missing-value summaries.
 
 ```{r}
 #| label: diagnose-data
+#| echo: false
 
 glimpse(raw_health_data)
 ```
@@ -84,6 +79,7 @@ Create `health_data_clean` with one row per county.
 
 ```{r}
 #| label: remove-duplicates
+#| echo: false
 
 health_data_clean <- raw_health_data %>%
   distinct(county, .keep_all = TRUE)
@@ -96,6 +92,7 @@ Create county, region, year, population, and cases columns.
 
 ```{r}
 #| label: reshape-long
+#| echo: false
 
 health_data_long <- health_data_clean %>%
   pivot_longer(
@@ -114,6 +111,7 @@ Calculate cases per 100,000.
 
 ```{r}
 #| label: calculate-rates
+#| echo: false
 health_data_long <- health_data_long %>%
   mutate(
     cases_per_100k = cases / 100000
@@ -127,6 +125,7 @@ Calculate mean rate by region and year.
 
 ```{r}
 #| label: summarize-region
+#| echo: false
 
 health_data_sum <- health_data_long %>%
   mutate(
@@ -147,6 +146,7 @@ Create a county rural-status table and join it with `left_join()`. Check duplica
 
 ```{r}
 #| label: join-data
+#| echo: false
 county_rural_status <- data.frame(
   county = c(
      "Fulton", "DeKalb", "Cobb", "Gwinnett", "Clayton",
@@ -172,6 +172,7 @@ Create a regional line graph, ranked 2024 county graph, and rural-status compari
 
 ```{r}
 #| label: Regional line visulaization
+#| echo: false
 regional_rates <- health_data_long %>%
   mutate(
     rate = (cases / population) * 100000
@@ -208,6 +209,7 @@ ggplot(
 
 ```{r}
 #| label: Ranked 2024 county visualization
+#| echo: false
 county_ru24 <- county_health_join %>% 
   select(county, population_2024, cases_2024) %>%
   mutate(
@@ -236,6 +238,7 @@ ggplot(
 
 ```{r}
 #| label: Rural Status Comparison Visualization
+#| echo: false
 
 rural_compar <- county_health_join %>%
   drop_na(cases_2023, population_2023, rural_status) %>%
@@ -269,3 +272,4 @@ ggplot(
 
 Explain why long format was useful, what causes row multiplication during joins, and why rates are preferable to counts.
 
+The pivot_long format was useful because it separated the case data by year. Therefore, I could visualize the compared differences between the years 2023 and 2024. Row multiplication during joins occurs when the joining key is not unique in one or both datasets, which results in multiple matching records and an increase in the number of rows. For example, if a county appears twice in a health dataset and once in a rural-status dataset, a left_join() can create duplicate rows for that county. Rates are generally preferable to counts because they account for differences in population size and allow for more accurate comparisons across counties or regions, while counts alone may provide duplicate areas with larger populations.
