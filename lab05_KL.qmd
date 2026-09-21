@@ -1,0 +1,134 @@
+---
+title: "Lab 5: Professional Quarto Portfolio Website"
+author: "Kimaya Lacey"
+format: docx
+editor: visual
+---
+
+# Learning Objectives
+
+You will create, connect, publish, and review the initial version of your professional Quarto portfolio website.
+
+# Part 1: Plan the Website
+
+Complete a planning table for:
+
+- Home,
+- About,
+- Education or Experience,
+- Skills,
+- Projects,
+- CV,
+- Contact.
+
+For each page, identify its purpose, required content, and materials needed.
+
+# Part 2: Create the Quarto Website
+
+Create a Quarto website project with a professional repository name.
+
+Create:
+
+```text
+_quarto.yml
+index.qmd
+about.qmd
+projects.qmd
+cv.qmd
+contact.qmd
+styles.css
+images/
+files/
+```
+
+# Part 3: Configure the Website
+
+Your `_quarto.yml` must include:
+
+- website project type,
+- `docs` output directory,
+- functioning navigation,
+- professional built-in theme,
+- custom CSS,
+- and table of contents where appropriate.
+
+```yaml
+# Add your configuration here.
+```
+
+# Part 4: Build Complete Pages
+
+Write complete, professional content for every required page.
+
+Do not submit empty pages or unfinished placeholders.
+
+# Part 5: Add the CV or Résumé
+
+Place a public-safe PDF in `files/` and create a functioning download link.
+
+# Part 6: Apply Design and Accessibility
+
+Include:
+
+- descriptive links,
+- meaningful heading levels,
+- alt text for images,
+- adequate contrast,
+- readable font sizes,
+- and consistent styling.
+
+# Part 7: Connect Git and GitHub
+
+Create or connect a GitHub repository. Make at least three meaningful commits during development.
+
+# Part 8: Publish
+
+Render the website to `docs/`, configure GitHub Pages, and test the public URL.
+
+# Part 9: Peer Review
+
+Ask a classmate to provide:
+
+- two strengths,
+- two recommended revisions,
+- and one question a hiring manager might ask.
+
+Two Strengths
+- The portfolio presents my education, research interests, professional experiences, and public health goals in a clear and organized format. 
+-  The content communicates my interest in connecting public health with healthcare operations, policy, and maternal health. 
+
+Two Recommended Revisions
+- Some pages could use more consistent formatting, spacing, and organization.  
+- Add more visual examples of my work, including additional examples of research projects, data visualizations, and presentations. 
+
+Question a Hiring Manager Might Ask
+
+“How have your academic and professional experiences prepared you to apply public health knowledge to healthcare operations and maternal health?”
+
+# Part 10: Reflection
+
+Explain:
+
+1. the professional identity you wanted to communicate,
+The professional identity I wanted to communicate through my portfolio is that of a developing public health professional who is interested in maternal health, health equity, healthcare operations, and policy. I wanted the portfolio to demonstrate both my academic preparation and my commitment to addressing barriers that affect underserved populations.
+
+2. your major design decisions,
+ I chose a clean and professional layout so that the content would remain the primary focus. I also included images and visual elements to make the portfolio more engaging while maintaining a professional appearance.
+
+3. your accessibility choices
+Accessibility was an important consideration when designing my website. I used clear headings and organized content into sections to make the pages easier to navigate. I also considered readable font sizes. 
+
+4. and the most challenging part of Git or GitHub.
+The most challenging part of github was pushing to github and creating a website page. 
+
+# Deliverables
+
+Submit:
+
+- public website URL,
+- GitHub repository URL,
+- complete website files,
+- functioning CV link,
+- peer review,
+- reflection,
+- and meaningful commit history.
