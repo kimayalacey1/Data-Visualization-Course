@@ -1,0 +1,277 @@
+---
+title: "Lab 7: Interactive Plotly Visualization"
+subtitle: "Student Version"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    code-copy: true
+    code-tools: true
+execute:
+  eval: false
+  warning: false
+  message: false
+---
+
+
+```{r}
+#| label: load-packages
+#| include: false
+#library(tidyverse)
+#library(gapminder)
+#library(plotly)
+#library(DT)
+#library(scales)
+```
+
+# Part 1: Prepare Data
+
+```{r}
+#| label: prepare-data
+#| echo: false
+gapminder %>%
+  rename(
+    life_expectancy = lifeExp,
+    population = pop,
+    gdp_per_capita = gdpPercap 
+    )
+
+gapminder_2007 <- gapminder %>% filter(year == 2007)
+glimpse(gapminder_2007)
+
+```
+
+# Part 2: Static Baseline
+
+```{r}
+#| label: static-plot
+#| echo: false
+gpm_cl <- gapminder_2007 %>% 
+  ggplot(
+    aes(
+      x = gdpPercap, 
+      y = lifeExp, colour = continent 
+    )
+  ) + 
+  geom_point(size = 2.5, alpha = 0.8) +
+  scale_x_log10(labels = label_dollar()) +
+  labs(
+    title = "GDP and life expectancy in 2007",
+    x = "GDP per capita",
+    y = "Life expectancy (years)"
+  ) +
+  theme_minimal()
+
+gpm_cl
+# Add your code here.
+```
+
+# Part 3: Custom Tooltip
+
+```{r}
+#| label: tooltip-plot
+#| echo: false
+
+gpm_cl <- gapminder_2007 %>%
+  ggplot(
+    aes(
+      x = gdpPercap,
+      y = lifeExp,
+      fill = continent,
+      text = paste0(
+        "Country: ", country,
+        "<br>Continent: ", continent,
+        "<br>Life expectancy: ", round(lifeExp, 1), " years",
+        "<br>GDP per capita: ", dollar(gdpPercap),
+        "<br>Population: ", comma(pop)
+      )
+    )
+  ) +
+  geom_point(size = 2.5, alpha = 0.8) +
+  scale_x_log10(labels = label_dollar()) +
+  labs(
+    title = "GDP and Life Expectancy, 2007",
+    x = "GDP per capita (log scale)",
+    y = "Life expectancy (years)",
+    fill = "Continent"
+  ) +
+  theme_minimal()
+
+# Create interactive plot with custom tooltips
+ggplotly(gpm_cl, tooltip = "text")
+```
+
+# Part 4: Convert with Plotly
+
+```{r}
+#| label: interactive-scatter
+#| echo: false
+
+gpm_cl <- gapminder_2007 %>% 
+  ggplot(
+    aes(
+      x = gdpPercap, 
+      y = lifeExp, 
+      colour = continent
+    )
+  ) + 
+  geom_point(size = 2.5, alpha = 0.8) +
+  scale_x_log10(labels = label_dollar()) +
+  labs(
+    title = "GDP and life expectancy in 2007",
+    x = "GDP per capita",
+    y = "Life expectancy (years)",
+    colour = "Continent"
+  ) +
+  theme_minimal()
+
+ggplotly(
+  gpm_cl,
+  dynamicTicks = TRUE
+) %>%
+  layout(
+    hovermode = "x unified"
+  ) %>%
+  config(
+    displaylogo = FALSE,
+    displayModeBar = TRUE,
+    responsive = TRUE,
+    scrollZoom = TRUE
+  )
+```
+
+# Part 5: Interactive Trend
+
+```{r}
+#| label: interactive-trend
+#| echo: false
+ continent_trends <- gapminder_data %>%
+   group_by(continent, year) %>%
+   summarize(
+     mean_life_expectancy = mean(life_expectancy, na.rm = TRUE),
+     .groups = "drop"
+   )
+
+ trend <- ggplot(
+   continent_trends,
+   aes(x = year, y = mean_life_expectancy, color = continent)
+ ) +
+   geom_line(linewidth = 1) +
+   labs(x = "Year", y = "Mean country-level life expectancy") +
+   theme_minimal()
+
+ ggplotly(trend)
+```
+
+# Part 6: Interactive Table
+
+```{r}
+#| label: interactive-table
+#| echo: false
+table_data <- gapminder_2007 %>%
+  transmute(
+    Country = country,
+    Continent = continent,
+    `Life expectancy` = round(lifeExp, 1),
+    `GDP per capita` = round(gdpPercap),
+    Population = pop
+  )
+
+DT::datatable(
+  table_data,
+  rownames = FALSE,
+  filter = "top",
+  options = list(pageLength = 10), 
+  fillContainer = "pink" 
+)
+```
+
+# Part 7: Accessibility Alternative
+
+# Summary 
+The scatterplot illustrates the cross-sectional relationship between country-level GDP per capita and life expectancy in 2007, distinguished by continent. Overall, the visualization demonstrates a distinct non-linear, positive association of a logarithmic trajectory where population health gains exhibit diminishing marginal returns at higher levels of economic output. Furthermore, distinct clustering by continent underscores significant regional heteronormality, highlighting persistent global health disparities. While higher GDP per capita correlates with extended life expectancy, substantial continental variance indicates that economic resources alone do not fully account for population health outcomes, pointing toward unmeasured structural and policy-level determinants.
+
+```{r}
+#| label: static-accessible-figure
+#| echo: false
+
+ gpm_cl <- gapminder_2007 %>% 
+  ggplot(
+    aes(
+      x = gdpPercap, 
+      y = lifeExp, 
+      colour = continent
+    )
+  ) + 
+  geom_point(size = 2.5, alpha = 0.8) +
+  scale_x_log10(labels = label_dollar()) +
+  scale_color_viridis_d(
+    option = "D",
+    end = 0.9,
+    name = "Continent"
+  ) +
+  labs(
+    title = "GDP and Life Expectancy in 2007",
+    x = "GDP per capita",
+    y = "Life expectancy (years)"
+  ) +
+  theme_minimal()
+
+gpm_cl
+```
+
+```{r}
+#| label: accessible-table
+#| echo: false
+
+accessible_table <- gapminder_2007 %>%
+  select(
+    country,
+    continent,
+    lifeExp,
+    gdpPercap,
+    pop
+  ) %>%
+  rename(
+    Country = country,
+    Continent = continent,
+    `Life Expectancy (Years)` = lifeExp,
+    `GDP per Capita` = gdpPercap,
+    Population = pop
+  ) %>%
+  arrange(Country)
+
+DT::datatable(
+  table_data,
+  rownames = FALSE,
+  filter = "top",
+  options = list(pageLength = 10), 
+)
+```
+
+
+# Part 8: Evaluate Interactivity
+
+# Interactive Features
+
+Hover Tooltips: Identifies a country's exact GDP per capita, life expectancy, and population without cluttering the graph.
+
+Zoom & Pan: Allows close-up inspection of tightly clustered countries and seamless navigation across the scatterplot.
+
+Continent Color Coding: Highlights regional patterns and cross-continental differences at a glance.
+
+Reset Axes: Restores the graph to its default view after zooming or panning.
+
+Download Option: Lets users export the chart for reports or presentations.
+
+Yes the added complexity is necessary. The interactive features make the large country-level data easy to explore without cluttering the visual layout. Users can inspect specific data points while still visualizing the global trends.
+
+# Part 9: Portfolio
+
+Add the interactive product to the Projects section with instructions and a static alternative.
+
+# Deliverables
+
+Submit the QMD, rendered HTML with working widgets, static alternative, interactive table, evaluation, and portfolio update.
+
+
