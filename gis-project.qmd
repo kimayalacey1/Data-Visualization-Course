@@ -1,0 +1,317 @@
+---
+title: "Lab 8: GIS Mapping for Public Health"
+subtitle: "Student Version"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    code-copy: true
+    code-tools: true
+execute:
+  eval: false
+  warning: false
+  message: false
+---
+
+# Learning Objectives
+
+You will create static and interactive public health maps with `sf`, `maps`, and `leaflet`.
+
+# Setup
+
+Load `tidyverse`, `sf`, `maps`, `leaflet`, and `htmltools`.
+
+```{r}
+#| label: load-packages
+#install.packages("leaflet")
+library(tidyverse)
+library(sf)
+library(maps)
+library(leaflet)
+library(htmltools)
+library(dplyr)
+
+```
+
+# Part 1: Georgia County Boundaries
+
+Use the `maps` package and convert Georgia county boundaries to an `sf` object.
+
+```{r}
+#| label: county-boundaries
+ga_counties <- maps::map(
+  database = "county",
+  regions = "georgia",
+  plot = FALSE,
+  fill = TRUE
+) %>%
+  st_as_sf() %>%
+  rename(
+    county_id = ID
+  ) %>%
+  mutate(
+    county_name = str_remove(
+      county_id,
+      "^georgia,"
+    ),
+    county_name = str_to_title(
+      county_name
+    )
+  )
+```
+
+# Part 2: Simulated Health Data
+
+Create county vaccination rate, child population, and target-status values using a reproducible seed. State that all values are simulated.
+
+```{r}
+#| label: health-data
+set.seed(716)
+
+county_health <- ga_counties %>%
+  st_drop_geometry() %>%
+  distinct(
+    county_id,
+    county_name
+  ) %>%
+  mutate(
+    vaccination_rate = pmin(
+      pmax(
+        rnorm(
+          n = n(),
+          mean = 74,
+          sd = 8
+        ),
+        45
+      ),
+      95
+    ),
+    child_population = round(
+      runif(
+        n = n(),
+        min = 1500,
+        max = 75000
+      )
+    )
+  )
+
+```
+
+# Part 3: Join
+
+Join health data to county geometry. Verify unmatched rows and row counts.
+
+```{r}
+#| label: spatial-join
+
+county_map_ga <- ga_counties %>%
+  left_join(
+    county_health,
+    by = c(
+      "county_id",
+      "county_name"
+    )
+  )
+```
+
+```{r}
+county_map_ga %>%
+  summarize(
+    county_count = n(),
+    missing_rates = sum(
+      is.na(vaccination_rate)
+    )
+  )
+```
+
+# Part 4: Continuous Choropleth
+
+Create an accessible choropleth with a clear legend and distinct missing-data color.
+
+```{r}
+#| label: continuous-map
+
+# Add your code here.
+```
+
+# Part 5: Classified Choropleth
+
+Classify counties using meaningful thresholds and create a second map.
+
+```{r}
+#| label: classified-map
+ggplot(
+  data = county_map_ga
+) +
+  geom_sf(
+    mapping = aes(
+      fill = vaccination_rate
+    ),
+    color = "white",
+    linewidth = 0.2
+  ) +
+  scale_fill_viridis_c(
+    option = "C",
+    direction = 1,
+    limits = c(
+      45,
+      95
+    ),
+    name = "Vaccination\ncoverage (%)"
+  ) +
+  labs(
+    title = "Simulated Vaccination Coverage Varied Across Georgia Counties",
+    subtitle = "Example data created for instructional purposes",
+    caption = "Boundary data: maps R package | Health values are simulated"
+  ) +
+  theme_void() +
+  theme(
+    legend.position = "right",
+    plot.title.position = "plot"
+  )
+
+```
+
+# Part 6: Point and Proportional-Symbol Maps
+
+Create simulated clinic locations from sampled county centroids. Map clinic locations and annual visits.
+
+```{r}
+#| label: clinic-maps
+set.seed(732)
+
+clinic_points <- county_map_ga %>%
+  slice_sample(
+    n = 20
+  ) %>%
+  st_centroid() %>%
+  transmute(
+    clinic_name = paste(
+      county_name,
+      "Community Clinic"
+    ),
+    annual_visits = round(
+      runif(
+        n = n(),
+        min = 500,
+        max = 12000
+      )
+    )
+  )
+
+ggplot() +
+  geom_sf(
+    data = ga_counties,
+    fill = "grey95",
+    color = "white",
+    linewidth = 0.2
+  ) +
+  geom_sf(
+    data = clinic_points,
+    size = 2.5,
+    color = "#0072B2"
+  ) +
+  labs(
+    title = "Simulated Community Clinic Locations",
+    subtitle = "Points are generated for instructional purposes",
+    caption = "Boundary data: maps R package | Clinic locations are simulated"
+  ) +
+  theme_void()
+```
+
+# Part 7: Interactive Leaflet Map
+
+Include:
+
+- basemap,
+- county polygons,
+- labels,
+- legend,
+- and highlight behavior.
+
+```{r}
+#| label: leaflet-map
+
+county_leaflet <- county_map_ga %>%
+  st_transform(
+    crs = 4326
+  )
+
+coverage_palette <- colorNumeric(
+  palette = "viridis",
+  domain = county_leaflet$vaccination_rate,
+  na.color = "#BDBDBD"
+)
+
+county_labels <- paste0(
+  "<strong>",
+  htmlEscape(
+    county_leaflet$county_name
+  ),
+  " County</strong>",
+  "<br>Simulated vaccination coverage: ",
+  round(
+    county_leaflet$vaccination_rate,
+    digits = 1
+  ),
+  "%",
+  "<br>Simulated child population: ",
+  scales::comma(
+    county_leaflet$child_population
+  )
+) %>%
+  lapply(
+    HTML
+  )
+```
+
+
+```{r}
+leaflet(
+  data = county_leaflet,
+  options = leafletOptions(
+    minZoom = 5
+  )
+) %>%
+  addProviderTiles(
+    providers$CartoDB.Positron
+  ) %>%
+  addPolygons(
+    fillColor = ~coverage_palette(
+      vaccination_rate
+    ),
+    fillOpacity = 0.8,
+    color = "white",
+    weight = 0.6,
+    opacity = 1,
+    label = county_labels,
+    highlightOptions = highlightOptions(
+      weight = 2,
+      color = "#333333",
+      fillOpacity = 0.9,
+      bringToFront = TRUE
+    )
+  ) %>%
+  addLegend(
+    pal = coverage_palette,
+    values = ~vaccination_rate,
+    title = "Simulated coverage (%)",
+    position = "bottomright",
+    opacity = 0.8
+  )
+```
+
+# Part 8: Ethics and Accessibility
+
+When interpreting geographically aggregated public health data, it is important to recognize that findings apply to groups rather than individuals, as making individual-level conclusions can lead to the ecological fallacy. Rates and patterns observed in neighborhoods, census tracts, or counties should therefore be interpreted with caution. Small cell sizes can create unstable estimates and increase the risk of identifying individuals, especially when dealing with rare conditions or small populations. To protect confidentiality, researchers often suppress small counts, aggregate areas, or use statistical smoothing techniques. Mapping sensitive health outcomes may also contribute to stigma by portraying communities as unhealthy or problematic, so results should be framed within broader social and structural contexts. Care must be taken to avoid language that blames affected populations for observed health disparities. Displaying exact locations or addresses can threaten privacy and should generally be avoided in favor of aggregated geographic units or masked locations. Missing data represent another important limitation because incomplete records can bias results and affect the validity of conclusions. Researchers should clearly report the extent of missing data and explain how it was handled during analysis. Finally, a noninteractive alternative, such as a static map, PDF report, or data table, should be provided to ensure accessibility for users who cannot access or use interactive visualizations.
+
+
+# Part 9: Portfolio
+
+Create `projects/gis-project.qmd` and add the map, methods, interpretation, limitations, and accessibility notes.
+
+This Leaflet GIS map displays county-level vaccination rates across Georgia using a choropleth map created by joining vaccination data to county boundary shapefiles. An accessible purple-blue-green color scheme was used. The map helps identify geographic patterns in vaccination coverage and may highlight regional disparities in healthcare access, transportation, health literacy, or socioeconomic conditions. Higher vaccination rates suggest greater population protection, while lower rates may indicate areas that could benefit from additional public health outreach. However, vaccination rates are aggregated at the county level, may contain missing or outdated information, and should not be used to draw conclusions about individual residents or establish causation. To improve accessibility, the map includes high-contrast colors, clear county boundaries, a descriptive legend, pop-up vaccination rates, keyboard navigation support, and a noninteractive alternative such as a data table or report.
+
+# Deliverables
+
+Submit the QMD, HTML, two choropleths, point map, proportional-symbol map, interactive map, ethics review, and portfolio update.
